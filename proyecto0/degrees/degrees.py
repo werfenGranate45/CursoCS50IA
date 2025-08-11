@@ -1,6 +1,5 @@
 import csv
 import sys
-import time
 
 from util import Node, StackFrontier, QueueFrontier
 
@@ -70,12 +69,7 @@ def main():
     if target is None:
         sys.exit("Person not found.")
 
-    start = time.perf_counter()
-    path, track  = shortest_path(source, target)
-    end   = time.perf_counter()
-
-    print(track)
-    print(f"Tiempo: {end - start:.6f} segundos")
+    path = shortest_path(source, target)
 
     if path is None:
         print("Not connected.")
@@ -97,19 +91,18 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    track, path  = 0, []
-    
+    path         = []
     start        = Node(state=source, parent=None, action=None)
     frontier     = QueueFrontier()
     explored     = set()
     frontier.add(start)
     
     while True:
-        if frontier.empty(): return None
+        if frontier.empty(): 
+            return None
         
         #Aqui inicio el algoritmo del uso de la frontera
         node_remove = frontier.remove()
-        track += 1
 
         if node_remove.state == target:
         
@@ -118,7 +111,8 @@ def shortest_path(source, target):
                 state  = node_remove.state    
                 path.append((action, state))
                 node_remove = node_remove.parent
-            return path, track
+            
+            return path
     
         #Agrego el estado, en este caso id para que no pase en caso de que ya lo haya recorrido
         explored.add(node_remove.state)
