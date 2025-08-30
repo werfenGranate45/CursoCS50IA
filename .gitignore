@@ -8,3 +8,5 @@ proyecto0/degrees/degrees.py:Zone.Identifier
 proyecto0/degrees/__pycache__/
 proyecto0/tictactoe/__pycache__/
 proyecto0/tictactoe/__pycache__/tictactoe.cpython-313.pyc
+.vscode/launch.json
+Proyecto1/minesweeper/__pycache__
