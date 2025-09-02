@@ -16,7 +16,6 @@ board_moves = [
     Representacion de los movimietos del tablero, ojo 8x8
     TODO Que se aplique al ancho y alto dado por el usuario 
 """
-
 class Minesweeper():
     """
     Minesweeper game representation
@@ -121,7 +120,7 @@ class Sentence():
         """Método que soporta el operador de resta y devuelve un objeto de la misma clase"""
         # Restar las celdas y el count
         new_cell  = self.cells - other.cells
-        new_count = self.count - other.count
+        new_count = abs(self.count - other.count)
     
         return self.__class__(new_cell, new_count)
 
@@ -183,12 +182,6 @@ class Sentence():
         #Si no es 0 ni uno no sabes por ende es indeterminada y la agregegas a la oracion
         if count != 0 and count != 1:
             self.cells.add(cell)
-    
-    def get_count(self):
-        return self.count
-
-    def get_cells(self):
-        return self.cells
         
 class MinesweeperAI():
     """
@@ -230,7 +223,7 @@ class MinesweeperAI():
             sentence.mark_safe(cell)
 
      #Aqui implementar la funcion get_vecinos
-    def get_neighbor(self, cell) -> list:
+    def make_sentence(self, cell, count) -> list:
         """Funcion que te entrega las celdas necesarias del movimiento seleccionado"""
         #Agrega las celdas vecinas
         neighbors = []
@@ -244,11 +237,22 @@ class MinesweeperAI():
 
                 # Update count if cell in bounds and is mine
                 if 0 <= i < self.height and 0 <= j < self.width:
-                    if board_moves[i][j]:
+                    if board_moves[i][j] in self.mines:
+                        count -= 1
+                    if board_moves[i][j] not in self.safes and board_moves[i][j] not in self.mines:
                         neighbors.append(board_moves[i][j])
         
-        return neighbors
+        return neighbors, count
 
+    def make_infer(self, sentence: Sentence, new_sentence: Sentence):
+        #El chico es el de cells y no el de new cells
+        # {A,B,C}     = 2 cells
+        # {A,B,C,D,E} = 1 new_cells
+        is_sub = sentence.cells.issubset(new_sentence.cells)
+        #Solo se puede aplicar esta logica si es un subset
+        #Y el residuo siempre sera el chiquito o lo que se pierde
+        if is_sub and not sentence == new_sentence:
+            return new_sentence - sentence
 
     def add_knowledge(self, cell, count):
         """
@@ -265,36 +269,87 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        cells        = self.get_neighbor(cell)
-        new_sentence = Sentence(cells, count)
-
-        #Primera parte si en la oracion dada nos da certecza de lo que son adelante, 
-        #Se agregan al conocimeinto de la IA
-        mines, safes = new_sentence.known_mines(), new_sentence.known_safes()
-        
-        if mines:
+        self.moves_made.add(cell)
+        self.mark_safe(cell)            
+        cells, n_count = self.make_sentence(cell, count)
+        new_sentence   = Sentence(cells, n_count)
+        mines, safes   = new_sentence.known_mines(), new_sentence.known_safes()
+        #TODO No iterar y mejor la forma de agregar las celadas al buscar como hacerlo
+        if mines: #Iteracion de mierda no hacer esto, papu da errores
             for mine in mines:
-                self.mines.add(mine)
+                self.mark_mine(mine)
         elif safes:
             for safe in safes:
-                self.safes.add(safe)
+                self.mark_safe(safe)
         else:
-        #Si no concluimos con certeza algo, solo mete las celdas que no tienes certeza
-            self.knowledge.append(new_sentence)
+            if new_sentence: #Si la oreacion esta vacía la neta no la metas caon
+                self.knowledge.append(new_sentence)
+            knowledge = self.knowledge.copy()
+            n = len(knowledge)
+            if not n == 1:
+                for i in range(n):
+                    for j in range(0, n-i-1):
+                        #Creo una inferencia
+                        infer = self.make_infer(knowledge[j], knowledge[j+1])
+                        #En caso de que haya una, verifica si con certeza sus celdas son minas o seguras
+                        if infer: 
+                            mines, safes   = infer.known_mines(), infer.known_safes()
+                            if mines:
+                                for mine in mines:
+                                    self.mark_mine(mine)
+                            elif safes:
+                                for safe in safes:
+                                    self.mark_safe(safe)
+                            else: # En caso de que no haya certeza la agregas al conocimento
+                                self.knowledge.append(infer)
+            #Aqui ultima verificada en caso de que alguna oracion haya cambiado y puedas crear un inferencia existosa
+        for setence in self.knowledge:
+            mines, safes   = setence.known_mines(), setence.known_safes()
+            if mines:
+                for mine in mines: #Igual logica de mierda
+                    self.mark_mine(mine)
+                self.knowledge.remove(setence)
+            elif safes:
+                for safe in safes:
+                    self.mark_safe(safe)
+                self.knowledge.remove(setence)
 
-            #Infiere
-            if not len(self.knowledge) == 1:
-                setence = self.knowledge.pop()
-                if len(setence) > len(new_sentence):
-                    infer = setence - new_sentence
-                else:
-                    infer = new_sentence - setence
-                self.knowledge.append(infer)
 
-        #Aqui se modificas movimeinto hecho y seguro
-        self.moves_made.add(cell)
-        self.mark_safe(cell)
-    
+        # for i in range(len(knowledge)):
+        #     for j in range(len(knowledge)):
+        #         pass
+        #     mines, safes = knowledge[i].known_mines(), knowledge[i].known_safes()
+        #     #Con esto yo me aseguro que esta inderterminado me debo de asegurar de no agregar las 
+        #     #Indeterminadas 
+        #     if mines:
+        #         for mine in mines:
+        #             self.mark_mine(mine)
+        #     if safes:
+        #         for safe in safes:
+        #             self.mark_safe(safe)
+        #     else:
+        #         """TODO COMPARAR CON TODAS LAS ORACIONES EN EL FOR PERO LA ESTRUCTURA ES LA MISMA"""
+        #         #Que pasa si la oracion esta indeterminada, tenemos que usar el metodo de atras
+        #         if not sentence == new_sentence: #En este caso pues no se infiere nada no pasa nada
+        #             #Ya que esta infiriendo
+        #             infer = self.make_infer(sentence, new_sentence)
+
+        #             if infer:
+        #                 mines, safes = infer.known_mines(), infer.known_safes()
+
+        #                 #Si con la inferencia determinanos que minas o seguras entonces
+        #                 #Las agregamos, sin embargo no se como esta el de las minas, el agregado
+        #                 #TODO AGREGAR CORRECTAMENTE LAS MINAS, y las celdas segurar encontrar la forma
+        #                 if mines:
+        #                     for mine in mines:
+        #                         self.mines.add(mine)
+        #                 if safes:
+        #                     for safe in safes:
+        #                         self.safes.add(safe)
+        #                         #Cualquier inferencia que pueda ser
+
+        #                 #Agregas la nueva inferencia
+        #                 self.knowledge.append(infer)
 
     def make_safe_move(self):
         #Lo mas importante no modifico nada
@@ -309,7 +364,7 @@ class MinesweeperAI():
             return None
         
     def get_moves(self):
-        return [(i,j) for i in range(8) for j in range(8)]
+        return [(i,j) for i in range(3) for j in range(3) if (i,j) not in self.moves_made and not self.mines]
 
     def make_random_move(self):
         """
