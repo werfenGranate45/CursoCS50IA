@@ -14,7 +14,7 @@ board_moves = [
 ]
 """
     Representacion de los movimietos del tablero, ojo 8x8
-    TODO Que se aplique al ancho y alto dado por el usuario 
+    TODO Que lo construya de alto o ancho
 """
 class Minesweeper():
     """
@@ -137,7 +137,7 @@ class Sentence():
         
         #Si numero de celdas es igual al contador, todas son minas
         if self.count == len(self.cells): #Esta puta mierda esta mal no me caste bien el set
-            return self.cells
+            return self.cells.copy()
         
         #En caso de que no hay tocado las condiciones, no podemos saber nada ???
         return set()
@@ -148,7 +148,7 @@ class Sentence():
         """
         #Si el numero de celdas es igual a 0, entoces todas son seguras
         if self.count == 0:
-            return self.cells
+            return self.cells.copy()
         
         #Si el numero de celdas es igual al, contador, entoces todas son minas, y regresamos un set vacio
         #if self.count == len(self.cells):
@@ -268,6 +268,8 @@ class MinesweeperAI():
                if it can be concluded based on the AI's knowledge base
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
+        
+        La neta algorimto de mierda se puede mejorar pero ya cayo al 99.9% XD que despues se mejore
         """
         self.moves_made.add(cell)
         self.mark_safe(cell)            
@@ -276,14 +278,15 @@ class MinesweeperAI():
         mines, safes   = new_sentence.known_mines(), new_sentence.known_safes()
         #TODO No iterar y mejor la forma de agregar las celadas al buscar como hacerlo
         if mines: #Iteracion de mierda no hacer esto, papu da errores
-            for mine in mines:
+            for mine in mines.copy():
                 self.mark_mine(mine)
         elif safes:
-            for safe in safes:
+            for safe in safes.copy():
                 self.mark_safe(safe)
         else:
             if new_sentence: #Si la oreacion esta vacía la neta no la metas caon
                 self.knowledge.append(new_sentence)
+            
             knowledge = self.knowledge.copy()
             n = len(knowledge)
             if not n == 1:
@@ -293,63 +296,30 @@ class MinesweeperAI():
                         infer = self.make_infer(knowledge[j], knowledge[j+1])
                         #En caso de que haya una, verifica si con certeza sus celdas son minas o seguras
                         if infer: 
-                            mines, safes   = infer.known_mines(), infer.known_safes()
+                            mines, safes = infer.known_mines(), infer.known_safes()
                             if mines:
-                                for mine in mines:
+                                for mine in mines.copy():
                                     self.mark_mine(mine)
                             elif safes:
-                                for safe in safes:
+                                for safe in safes.copy():
                                     self.mark_safe(safe)
                             else: # En caso de que no haya certeza la agregas al conocimento
                                 self.knowledge.append(infer)
             #Aqui ultima verificada en caso de que alguna oracion haya cambiado y puedas crear un inferencia existosa
         for setence in self.knowledge:
+            if len(setence.cells) == 0 and setence.count == 0:
+                print(setence)
+                self.knowledge.remove(setence)
             mines, safes   = setence.known_mines(), setence.known_safes()
             if mines:
-                for mine in mines: #Igual logica de mierda
+                for mine in mines.copy(): #Igual logica de mierda
                     self.mark_mine(mine)
                 self.knowledge.remove(setence)
             elif safes:
-                for safe in safes:
+                for safe in safes.copy():
                     self.mark_safe(safe)
                 self.knowledge.remove(setence)
 
-
-        # for i in range(len(knowledge)):
-        #     for j in range(len(knowledge)):
-        #         pass
-        #     mines, safes = knowledge[i].known_mines(), knowledge[i].known_safes()
-        #     #Con esto yo me aseguro que esta inderterminado me debo de asegurar de no agregar las 
-        #     #Indeterminadas 
-        #     if mines:
-        #         for mine in mines:
-        #             self.mark_mine(mine)
-        #     if safes:
-        #         for safe in safes:
-        #             self.mark_safe(safe)
-        #     else:
-        #         """TODO COMPARAR CON TODAS LAS ORACIONES EN EL FOR PERO LA ESTRUCTURA ES LA MISMA"""
-        #         #Que pasa si la oracion esta indeterminada, tenemos que usar el metodo de atras
-        #         if not sentence == new_sentence: #En este caso pues no se infiere nada no pasa nada
-        #             #Ya que esta infiriendo
-        #             infer = self.make_infer(sentence, new_sentence)
-
-        #             if infer:
-        #                 mines, safes = infer.known_mines(), infer.known_safes()
-
-        #                 #Si con la inferencia determinanos que minas o seguras entonces
-        #                 #Las agregamos, sin embargo no se como esta el de las minas, el agregado
-        #                 #TODO AGREGAR CORRECTAMENTE LAS MINAS, y las celdas segurar encontrar la forma
-        #                 if mines:
-        #                     for mine in mines:
-        #                         self.mines.add(mine)
-        #                 if safes:
-        #                     for safe in safes:
-        #                         self.safes.add(safe)
-        #                         #Cualquier inferencia que pueda ser
-
-        #                 #Agregas la nueva inferencia
-        #                 self.knowledge.append(infer)
 
     def make_safe_move(self):
         #Lo mas importante no modifico nada
@@ -364,7 +334,7 @@ class MinesweeperAI():
             return None
         
     def get_moves(self):
-        return [(i,j) for i in range(3) for j in range(3) if (i,j) not in self.moves_made and not self.mines]
+        return [(i,j) for i in range(8) for j in range(8) if (i,j) not in self.moves_made and not self.mines]
 
     def make_random_move(self):
         """
@@ -373,7 +343,7 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        #Obtengo todos los movimientos del tabler
+        #Obtengo todos los movimientos del tabla
         moves          = self.get_moves()
         possible_moves = []
 
@@ -386,7 +356,7 @@ class MinesweeperAI():
                 if move not in self.mines:
                     possible_moves.append(move)
 
-        #Una vez obtenido mis movimentos, elegimos en caso de que no este vacio posible moves
+        #Una vez obtenido mis movimentos, elegimos en caso de que no este vacio posible movimientos
         if not len(possible_moves) == 0:
             #Elijo el movimeinto aleatorio, y lo meto al set de moviemntos hechos
             move = random.choice(possible_moves)

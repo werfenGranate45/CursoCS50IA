@@ -1,0 +1,5 @@
+24/25
+
+Error no puede inferir, Basado en check50
+MinesweeperAI.add_knowledge can infer safe cells when given new information
+    did not find (0, 0) in safe cells when possible to conclude safe
