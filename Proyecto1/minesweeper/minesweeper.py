@@ -308,7 +308,6 @@ class MinesweeperAI():
             #Aqui ultima verificada en caso de que alguna oracion haya cambiado y puedas crear un inferencia existosa
         for setence in self.knowledge:
             if len(setence.cells) == 0 and setence.count == 0:
-                print(setence)
                 self.knowledge.remove(setence)
             mines, safes   = setence.known_mines(), setence.known_safes()
             if mines:
