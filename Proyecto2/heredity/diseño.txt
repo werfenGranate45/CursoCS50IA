@@ -1,0 +1,23 @@
+Diseño de la herencia practica 2
+
+Introduccion: Crear un modelo de que haga Inferencia, que identifique la probabilidad de que el padre tenga problemas de oido en base
+a los genes del padre.
+
+Para construir el modelo se usan las redes de bayesian donde los nodos padres
+estan conformados por un vector que consta
+
+padre = <0 , 1, 2> Donde los valores del vector representa la potencial pertenencia
+de tener 0, 1 0 2 copias del gen, la forma en la que se le va pasar el gen es la siguiente
+
+En caso de que el padre tenga 0:
+    El padre no le pasará el gen a tu hijo
+
+En caso de que el padre tenga 1:
+    El padre tiene una probabilidad del 0.5 o 50% de pasarle el gen
+
+En caso de que el padre tenga 2:
+    El padre le pasara con probabilidad del 100% al hijo
+
+Y cada padre tendra un Trait(Rasgo) que es una variable aleatoria: (Si , No)
+Al igual que el vector del padre
+
