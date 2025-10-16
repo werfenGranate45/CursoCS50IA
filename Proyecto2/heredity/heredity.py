@@ -183,6 +183,7 @@ def calculate_set_one_gene(people, one_gene, two_gene, have_trait):
     Metodo que calcula todas las probabilidades del set de personas que tengan un gen
     """
     #El extra es la variable cuando un padre no tiene copias, "No estoy seguro si eso correcto"
+    trait    = 1
     extra    = 1
     proba    = 0
     the_ones = {} #Toda el set de probabilidades seran guardads en un diccionario, correspondientes a la copia del solo gen
@@ -203,15 +204,16 @@ def calculate_set_one_gene(people, one_gene, two_gene, have_trait):
 
             #Tercero Juntamos las probabilidades
             if father_gen == PROBS['mutation']:
-                extra = PROBS['mutation'] + mother_gen
+                extra = (PROBS['mutation'], mother_gen)
             if mother_gen == PROBS['mutation']:
-                extra = PROBS['mutation'] + father_gen
+                extra = (PROBS['mutation'],  father_gen)
             
-            proba = (father_gen * mother_gen) * (extra)
-            
-        if member in have_trait: #Si esta en el set del trait
-            trait = PROBS['trait'][people[member]['trait']]
-            the_ones.update({member: proba*trait})
+            proba = (father_gen * extra[1] + extra[0] * mother_gen)
+        
+        if member in have_trait:
+            trait = PROBS['trait'][1][people[member]['trait']]    
+        
+        the_ones.update({member: proba*trait})
     
     return the_ones
         
@@ -224,6 +226,7 @@ def calculate_set_two_genes(people, one_gene, two_genes, have_trait):
     the_twos = {}
     extra = 1
     proba = 0
+    trait = 1
 
     for member in two_genes:
         if not_have_a_parent(people, member):
@@ -244,14 +247,12 @@ def calculate_set_two_genes(people, one_gene, two_genes, have_trait):
             if mother_gen == PROBS['mutation']:
                 extra = PROBS['mutation'] + father_gen
             
-            proba = (father_gen * mother_gen) * (extra)
-            
-        if member in have_trait: #Si esta en el set del trait
-            trait = PROBS['trait'][people[member]['trait']]
-            the_twos.update({member: (proba*trait)})
-            
+            #proba = (father_gen * mother_gen) * (extra)
+            proba = (father_gen * extra[1] + extra[0] * mother_gen)
+        
         if member in have_trait:
-            trait = PROBS['trait'][people[member]['trait']]   
+            trait = PROBS['trait'][2][people[member]['trait']]
+             
         the_twos.update({member: proba*trait})
     
     return the_twos
@@ -281,10 +282,10 @@ def calculate_set_no_genes(people, one_gene, two_genes, no_gen_people):
             if mother_gen == PROBS['mutation']:
                 extra = PROBS['mutation'] + father_gen
             
-            proba = (father_gen * mother_gen) * (extra)
-            trait = PROBS['trait'][people[member]['trait']]    
-            
-            the_nones.update({member: proba*trait})
+            proba = (father_gen * extra[1] + extra[0] * mother_gen)
+        trait = PROBS['trait'][0][people[member]['trait']]
+
+        the_nones.update({member: proba*trait})
         
 
     return the_nones
@@ -299,29 +300,32 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone not in `one_gene` or `two_gene` does not have the gene, and
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
+    
+    El trait es otro set al que debemos de calcularle, considerando como en have_trait, todo el set
+    de personas a la cual le queremos calcular el si tienen trait o no  como si fuera un set de la copia o no
     """
     name_peoples = list(people.keys())
-
+    
     """
     Estos metodos no contemplan a las personas que tienen  0 copias del gen, ni las que 
     no tienen trair incluso adentro de las funciones
     Asi que vamos a filtrar por aquellos que no tienen copias ni trait
     """
 
-    no_genes = [person for person in people if person not in [one_gene, two_genes, have_trait]]
+    no_genes = [] #[person for person in people if person not in [one_gene, two_genes, have_trait]]
+    for person in name_peoples:
+        if person not in one_gene and person not in two_genes and person not in have_trait:
+            no_genes.append(person)
     #Por cada persona que no tiene copias del gen ni trair
     
 
 
-    probabily_non_gen = calculate_set_no_genes(people, one_gene, two_genes)
+    probabily_non_gen = calculate_set_no_genes(people, one_gene, two_genes, no_genes)
     probabily_one_gen = calculate_set_one_gene(people, one_gene, two_genes, have_trait)
     probabily_two_gen = calculate_set_two_genes(people, one_gene, two_genes, have_trait)
-
-    
-
-    
-
-
+    print(probabily_non_gen)
+    print(probabily_one_gen)
+    print(probabily_two_gen)
 
 
 
@@ -343,9 +347,8 @@ def normalize(probabilities):
     raise NotImplementedError
 
 
-
 def nigger():
-    print(joint_probability(THE_PAPUS, "Harry", "James", "James"))
+    joint_probability(THE_PAPUS, {'Harry'}, {'James'}, {'James'})
 
 
 
