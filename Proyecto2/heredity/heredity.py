@@ -25,6 +25,14 @@ THE_PAPUS = {
     }
 }
 
+THE_PAPUS_2 ={
+    'Arthur': {'name': 'Arthur', 'mother': None, 'father': None, 'trait': False},
+    'Hermione': {'name': 'Hermione', 'mother': None, 'father': None, 'trait': False},
+    'Molly': {'name': 'Molly', 'mother': None, 'father': None, 'trait': None},
+    'Ron': {'name': 'Ron', 'mother': 'Molly', 'father': None, 'trait': False},
+    'Rose': {'name': 'Rose', 'mother': 'Ron', 'father': 'Hermione', 'trait': True}
+}
+
 
 PROBS = {
 
@@ -196,9 +204,10 @@ def calculate_set_one_gene(people, one_gene, two_gene, have_trait):
             #Primero hay que conseguir a sus padres
             father = people[member]['father']
             mother = people[member]['mother']
-           
-            #Segundo, Obtenemos las probabilidades en base a sus genes todos tienen una probabilidad de que mute con 0.01
-           
+            
+            #Si lo tiene en el padre y la madre tenemos que tener los 2 casos
+            #Si tenemos el caso de que el gen le pasa la madre pero no del padre
+            # people[mother][0][]
             father_gen = get_gen_father(father, one_gene, two_gene)
             mother_gen = get_gen_father(mother, one_gene, two_gene) 
 
@@ -250,7 +259,7 @@ def calculate_set_two_genes(people, one_gene, two_genes, have_trait):
             #proba = (father_gen * mother_gen) * (extra)
             proba = (father_gen * extra[1] + extra[0] * mother_gen)
         
-        if member in have_trait:
+        if member in have_trait: #ESTA probabilidad sera por aparte
             trait = PROBS['trait'][2][people[member]['trait']]
              
         the_twos.update({member: proba*trait})
@@ -305,28 +314,16 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     de personas a la cual le queremos calcular el si tienen trait o no  como si fuera un set de la copia o no
     """
     name_peoples = list(people.keys())
-    
-    """
-    Estos metodos no contemplan a las personas que tienen  0 copias del gen, ni las que 
-    no tienen trair incluso adentro de las funciones
-    Asi que vamos a filtrar por aquellos que no tienen copias ni trait
-    """
-
-    no_genes = [] #[person for person in people if person not in [one_gene, two_genes, have_trait]]
-    for person in name_peoples:
-        if person not in one_gene and person not in two_genes and person not in have_trait:
-            no_genes.append(person)
-    #Por cada persona que no tiene copias del gen ni trair
-    
+    no_copy_gen = [name for name in people.keys() if name not in one_gene and name not in two_genes]
 
 
-    probabily_non_gen = calculate_set_no_genes(people, one_gene, two_genes, no_genes)
-    probabily_one_gen = calculate_set_one_gene(people, one_gene, two_genes, have_trait)
-    probabily_two_gen = calculate_set_two_genes(people, one_gene, two_genes, have_trait)
-    print(probabily_non_gen)
-    print(probabily_one_gen)
-    print(probabily_two_gen)
+    # no_genes = [] #[person for person in people if person not in [one_gene, two_genes, have_trait]]
+    # for person in name_peoples:
+    #     if person not in one_gene and person not in two_genes and person not in have_trait:
+    #         no_genes.append(person)
+    # #Por cada persona que no tiene copias del gen ni trair
 
+    return no_copy_gen
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
@@ -353,5 +350,5 @@ def nigger():
 
 
 if __name__ == "__main__":
-   # main()
-   nigger()
+   main()
+   #nigger()
